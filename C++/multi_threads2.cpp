@@ -17,6 +17,10 @@ double pi_partial(long long int start, long long int end) {
 
 
     for (long long int i = start; i < end; i += 2) {
+        pi_4 += sign * (1.0 / i);
+        sign *= -1;
+        
+        //The rest of the loop is just for the percentage counter
         step++;
         if (start == 1 && percent < 100 && step % percent_step == 1) {
             percent+=2;
@@ -24,8 +28,6 @@ double pi_partial(long long int start, long long int end) {
             if (percent >= 99)
                 cout << "\nCalculation complete!" << endl;
         }
-        pi_4 += sign * (1.0 / i);
-        sign *= -1;
     }
 
     return pi_4;
@@ -55,18 +57,20 @@ double pi_async(long long int n, int num_threads) {
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        cerr << "Usage: " << " <n>" << " <threads> " << endl;
+        cerr << "Usage: " << " <n (precision)>" << " <threads> " << endl;
         return 1;
     }
 
     long long int n = stoll(argv[1]);
     int threads = atoi(argv[2]);
- 
+    
+
+    //Start clock
     auto start = chrono::high_resolution_clock::now();
  
-    // unsync the I/O of C and C++.
     ios_base::sync_with_stdio(false);
  
+    //Run the calculations, setting precision to 51 to see calculated digits from pi
     cout << fixed << setprecision(51) << pi_async(n, threads) << endl; 
  
     auto end = chrono::high_resolution_clock::now();
@@ -77,7 +81,7 @@ int main(int argc, char* argv[]) {
  
     time_taken *= 1e-9;
  
-    cout << "Time taken by program is : " << fixed << setprecision(40) << time_taken;
+    cout << "Time taken by program is : " << fixed << setprecision(5) << time_taken;
     cout << " sec" << endl;
     return 0;
 }
