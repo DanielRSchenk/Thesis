@@ -1,0 +1,81 @@
+Io bound zelf iets maken om energie kosten van primitieven te benchmarken
+wanneer sync of async?
+Testen in rust en c++, makkelijk te schalen naar meerdere talen
+Waardoor ontwikkelaars ondersteunt kunnen worden door de gegeven informatie in de keuze van sync vs async in hun taal (of zelfs keuze)
+Vergelijk resultaten van beide.
+Verklaar waarom theoretisch anders is dan realistische resulaten
+Checken of dit valide onderzoeks vraag is asap
+
+
+Primitives:
+Writing to disk
+Sending stuff over the network
+Fetching user input
+
+
+Plan:
+Create a mock server simulation for databases that has a random delay. Run an x amounts of requests async and sync. Benchmark the difference in power consumption (and maybe more).
+
+Do the same for networking, or with different properties. For example with rare but long delays or many shorter delays. Which performs best in what situation.
+
+Make a test plan that is replicable in other languages. For now test Rust and C++.
+
+Ook stukje ervoor die theoretisch gaat analyseren wat er waarschijnlijk zal gebeuren, en daaran verklaren waarom dit niet of wel zo is.
+
+Hulp voor ontwikkelaars stukje
+
+
+gpt thoughts:
+Your thesis idea of comparing Rust and C++ async/sync implementations using mock simulations for network and disk I/O sounds excellent! Here’s a breakdown of why it's promising and how you could enhance it:
+
+### 1. **Realism in Mock Simulation:**
+   By simulating unpredictable network conditions (e.g., packet drops, jitter, or random delays) and disk I/O (variable read/write latencies), you can model real-world scenarios. This will help demonstrate how async vs. sync operations handle unpredictable workloads. Simulating these behaviors gives you control over variables like latency, error rates, and I/O throughput, allowing for controlled, repeatable experiments.
+
+   - **Network Simulation**: Simulate random delays, packet drops, jitter, or even retries. Async systems are expected to outperform in high-latency and high-unpredictability scenarios. You could also simulate server/client interactions with random loss or congestion.
+   - **Disk I/O Simulation**: Simulate variable disk latencies (like SSD vs. HDD behavior) and access patterns (sequential vs. random reads). Disk I/O is generally more deterministic than network I/O but can still benefit from async in specific cases (high concurrency or large I/O operations).
+
+### 2. **Async vs. Sync Insights:**
+   Your work could help provide a decision matrix for developers:
+   - **Async**: Works best for high-concurrency tasks, where many I/O-bound operations occur simultaneously. Ideal for network servers handling numerous connections or disk I/O operations that don't block.
+   - **Sync**: Could be more straightforward and perform better for low-latency, CPU-bound tasks or simple workloads without much I/O waiting.
+
+   By identifying cases where async yields better performance vs. sync, you can offer practical guidance to developers.
+
+### 3. **Key Metrics to Compare:**
+   To give concrete insights, your simulations should track several key metrics:
+   - **Throughput**: How many tasks can be completed in a given period (for async/sync versions).
+   - **Latency**: The time taken to complete individual tasks.
+   - **CPU Usage**: Async generally uses more CPU cycles (polling, context switching), while sync might block but use fewer resources.
+   - **Memory Usage**: Async programming often leads to higher memory usage due to tasks awaiting results or holding state.
+   - **Complexity/Code Overhead**: As async code is often more complex than sync, you could discuss how much extra effort it takes for developers to implement and maintain.
+
+### 4. **Cross-Language Insights (Rust vs. C++):**
+   Rust's `async` is very different from C++'s in terms of ergonomics and safety, so comparing the two would provide useful insights. Some points to highlight:
+   - **Rust’s async/await**: Rust provides compile-time safety and avoids common async pitfalls like race conditions due to its borrow checker. It uses cooperative multitasking with futures and tasks.
+   - **C++ (Boost Asio or newer libraries)**: C++ has different approaches to async (e.g., Boost.Asio, coroutines), often requiring more manual memory management and error handling.
+   - Compare:
+     - **Ease of use**
+     - **Performance (how efficiently each handles large-scale concurrent tasks)**
+     - **Error handling**: Rust’s ownership model simplifies async error handling, whereas C++ often needs careful memory and lifetime management.
+
+### 5. **Experimental Setup:**
+   - **Controlled Simulations**: You could create a testbed where network/disk simulation parameters (e.g., latency, packet drops, read/write speed) can be adjusted. By gradually introducing more challenging conditions, you can measure how well each system scales.
+   - **Workloads**:
+     - Simulate a web server handling multiple connections (network-heavy).
+     - Simulate a file system or database workload (disk-heavy).
+     - Hybrid workloads (e.g., server writing logs to disk while serving multiple clients).
+
+### 6. **Expected Findings:**
+   You may find that:
+   - **Async** will shine when there are large numbers of I/O-bound tasks with significant wait times (e.g., web servers, chat apps).
+   - **Sync** may outperform in simpler, CPU-bound, or low-latency cases where async overhead is unnecessary (e.g., high-performance computation).
+   - Language-specific differences (Rust’s safety and zero-cost abstractions may lead to different trade-offs compared to C++).
+
+### 7. **Next Steps**:
+   - **Design mock simulations**: Implement simple mock network and disk subsystems that can be tuned for delay, loss, and random interruptions.
+   - **Pick workloads**: Choose realistic workloads like network servers, file servers, or mixed tasks.
+   - **Collect data**: Benchmark and compare the performance of async vs. sync in both Rust and C++.
+
+In summary, this thesis could produce highly practical and valuable insights for developers deciding between async and sync models in Rust and C++, particularly in I/O-heavy systems. You'll be providing data-driven recommendations and helping them balance performance with code complexity.
+
+
