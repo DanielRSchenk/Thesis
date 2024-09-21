@@ -31,13 +31,22 @@ using namespace std;
 int main(int argc, char* argv[])  
 {  
     Endpoint ep;
-    vector<int> delays = create_delay_array(10000, 1000);
-    cout << delays[1] << endl;
-    
-    // std::future<int> test = std::async(std::launch::async, ep.network, 10000, 1000);
-    // std::future<int> test2 = std::async(std::launch::async, ep.disk);
-    // std::cout << "Result: " << test.get() << std::endl;
-    // std::cout << "Result2: " << test2.get() << std::endl;
+    int total_calls = 1000;
+    vector<int> delays = create_delay_array(10000, total_calls);
+
+    vector<future<int>> futures;
+
+    // Queue tasks to run on the same thread using std::launch::deferred
+    for(int i = 0; i < total_calls; i++) {
+        // Use std::launch::deferred to defer task execution until get() is called
+        futures.push_back(std::async(std::launch::deferred, ep.disk, delays[i], i));
+    }
+
+    // Sequentially retrieve results (tasks will run one by one, but asynchronously scheduled)
+    for(int i = 0; i < total_calls; i++) {
+        std::cout << "Result: " << futures[i].get() << std::endl;
+    }
+
     return 0;
 }
 
