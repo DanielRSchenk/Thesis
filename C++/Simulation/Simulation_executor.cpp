@@ -14,7 +14,6 @@ using namespace std;
             cout << "Error: millis is lower than calls" << endl;
             return delays;
         }
-        cout << "network start" << endl;
 
         srand(time(0));
         int total_millis_left = total_millis - total_calls;
@@ -23,62 +22,57 @@ using namespace std;
             total_millis_left--;
         }
         for(int i = 0; i < total_calls; i++) {
-            cout << delays[i] << " ";
+            //cout << delays[i] << " ";
         }
         return delays;
     }
 
-int main(int argc, char* argv[])  
-{  
-    Endpoint ep;
-    int total_calls = 1000;
-    vector<int> delays = create_delay_array(10000, total_calls);
 
+    int main(int argc, char* argv[])  
+    {  
 
-    //This code is written by chatgpt, but is only used for understanding, not for actual testing
-    vector<future<int>> futures;
-    vector<thread> threads; // Store threads to manage lifecycle
-    // Launch tasks asynchronously (but all will complete sequentially on one thread)
-    for (int i = 0; i < total_calls; i++) {
-        // Use a promise to communicate with the future in a non-blocking way
-        promise<int> prom;
-        futures.push_back(prom.get_future()); // Get future associated with the promise
+        int total_calls = 1000;
+        int total_delays = 10000;
+        vector<int> delays = create_delay_array(total_delays, total_calls);
 
-        // Launch task in a thread and move promise to ensure the result is set later
-        threads.emplace_back([=, p = move(prom)]() mutable {
-            int result = ep.disk(delays[i]*1000, i); // Simulate task
-            p.set_value(result); // Set the result when done
-        });
-    }
+        Endpoint ep;
 
-
-    // Simulated event loop to check and collect task results asynchronously
-    bool tasks_remaining = true;
-    while (tasks_remaining) {
-        tasks_remaining = false;
-        for (int i = 0; i < total_calls; i++) {
-            auto status = futures[i].wait_for(chrono::milliseconds(100));
-            if (status == future_status::ready) {
-                // Retrieve the result and print it
-                if (futures[i].valid()) {
-                    cout << "Task " << i << " completed with result: " << futures[i].get() << endl;
-                }
-            } else {
-                tasks_remaining = true; // Some tasks are still running
-            }
+        //Async version
+        auto start_async = chrono::high_resolution_clock::now();
+    
+        ios_base::sync_with_stdio(false);
+    
+        std::vector<std::future<std::int32_t>> tasks;
+        for (int i = 0; i <  delays.size(); i++) {
+            //cout << i << endl;
+            tasks.push_back(std::async(std::launch::async, ep.database, delays[i], i));
         }
-
-        // Simulate doing other work while waiting for tasks
-        cout << "Waiting for tasks to complete..." << endl;
-        std::this_thread::sleep_for(chrono::milliseconds(100)); // Pause to simulate non-blocking work
-    }
-
-    // Join all threads to ensure they have finished properly
-    for (auto& th : threads) {
-        if (th.joinable()) {
-            th.join();
+        for (auto &task : tasks) {
+            std::int32_t result = task.get();
         }
+    
+        auto end_async = chrono::high_resolution_clock::now();
+        double time_taken_async = chrono::duration_cast<chrono::nanoseconds>(end_async - start_async).count();
+        time_taken_async *= 1e-9;
+    
+        cout << "Time taken by async rogram is : " << time_taken_async << "seconds" << endl;
+
+        //Sync version
+        auto start_sync = chrono::high_resolution_clock::now();
+    
+        ios_base::sync_with_stdio(false);
+    
+        for (int i = 0; i <  delays.size(); i++) {
+            //cout << i << endl;
+            ep.database(delays[i], i);
+        }
+    
+        auto end_sync = chrono::high_resolution_clock::now();
+        double time_taken_sync = chrono::duration_cast<chrono::nanoseconds>(end_sync - start_sync).count();
+        time_taken_sync *= 1e-9;
+    
+        cout << "Time taken by sync rogram is : " << time_taken_sync << "seconds" << endl;
+
+        return 0;
     }
-    return 0;
-}
 
